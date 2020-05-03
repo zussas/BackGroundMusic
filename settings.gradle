@@ -1,0 +1,2 @@
+rootProject.name='BackGroundMusic'
+include ':app'
