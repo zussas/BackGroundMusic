@@ -108,13 +108,15 @@ public class MainActivity extends AppCompatActivity {
         mBtnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {                           //  TODO　：　クリックリスナを変更　onClickSkipButton()
-                skip(-1);                                       //  一つ前の画像に戻る
+                skipImageView(-1);                                       //  一つ前の画像に戻る
+                skipMusicPlay(-1);
             }
         });
         mBtnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {                           //  TODO　：　クリックリスナを変更　onClickBackButton()
-                skip(1);                                        //  次の画像に進む
+                skipImageView(1);                                        //  次の画像に進む
+                skipMusicPlay(1);
             }
         });
         mBtnPlay = findViewById(R.id.imgBtnPlay);
@@ -126,7 +128,6 @@ public class MainActivity extends AppCompatActivity {
          */
         mMediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.bgm1);
         mMediaPlayer.seekTo(0);
-        mMediaPlayer.setOnCompletionListener(new PlayerCompletionListener());       //  メディア再生の終了を検知するリスナ
         mTimeTotal = mMediaPlayer.getDuration();                                    //  音楽再生総時間の取得
 
 
@@ -240,13 +241,13 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * 自作メソッド　：　指定した数だけ　NowPlayNum　の値を変更し、その後画像を　mImageList にセットする
+     * 自作メソッド　：　指定した数だけ　NowPlayNum　の値を変更し、その後画像を　mImageSwitcher にセットする
      */
-    private void skip(int move) {
+    private void skipImageView(int move) {
 
-        mMediaPlayer.stop();
         mNowPlayNum = mNowPlayNum + move;
 
+        //  TODO　：　あとでメソッド化する
         if (mNowPlayNum < 0) {                              //  nowPlayNub が　０　以下になったとき
             mNowPlayNum = mImageList.length -1;             //  配列の最後の番号に設定
         } else if (mNowPlayNum >= mImageList.length) {      //  nowPlayNub が　配列の長さを超えたとき
@@ -255,8 +256,47 @@ public class MainActivity extends AppCompatActivity {
         mImageSwitcher.setImageResource(mImageList[mNowPlayNum]);
         mTvTitle.setText(mTitleList[mNowPlayNum]);
 
-        seekBar.setProgress(0);                             //  SeekBar を最初に戻す
+    }
 
+    /**
+     * 自作メソッド　：　指定した数だけ　NowPlayNum　の値を変更し、その後音楽を mMediaPlayer にセットする
+     */
+    private void skipMusicPlay(int move) {
+
+        mMediaPlayer.stop();
+        mMediaPlayer.reset();
+
+        //  TODO　：　あとでメソッド化する
+        mNowPlayNum += move;
+        if (mNowPlayNum < 0) {                              //  nowPlayNub が　０　以下になったとき
+            mNowPlayNum = mImageList.length -1;             //  配列の最後の番号に設定
+        } else if (mNowPlayNum >= mImageList.length) {      //  nowPlayNub が　配列の長さを超えたとき
+            mNowPlayNum = 0;                                //  配列の最初の番号に設定
+        }
+
+        String uriStr = "android.resources://" +
+                getPackageName() + "/bgm" + mNowPlayNum;
+        Uri uri = Uri.parse(uriStr);
+        try {
+            mMediaPlayer.setDataSource(MainActivity.this, uri);
+            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    Toast.makeText(
+                            MainActivity.this,
+                            "再生準備完了です！",
+                            Toast.LENGTH_LONG).show();
+                }
+            });
+            mMediaPlayer.prepareAsync();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mMediaPlayer.seekTo(0);
+        mTimeTotal = 0;
+        mTimeTotal = mMediaPlayer.getDuration();
+
+        mMediaPlayer.start();
     }
 
 
